@@ -141,10 +141,17 @@ function ConfirmDel({ label, onConfirm, onClose }) {
 
 // ── MODAL OP ─────────────────────────────────────────────────────────────────
 function ModalOP({ initial, productos, clientes, onSave, onClose }) {
-  const [form, setForm] = useState(initial ? JSON.parse(JSON.stringify(initial)) : {
-    fecha:"", cliente:clientes[0]||"", fechaEntrega:"", obs:"",
-    items:[{ pid:uid(), producto:productos[0]||"", cantPlan:"", cantProd:"0", estado:"Tejeduría" }]
-  });
+  const [form, setForm] = useState(initial ? {
+  ...JSON.parse(JSON.stringify(initial)),
+  numero: initial?.id ? initial.id.replace("OP-", "") : ""
+} : {
+  fecha:"",
+  cliente:clientes[0]||"",
+  obs:"",
+  fechaEntrega:"",
+  numero:"",
+  items:[{ pid:uid(), producto:productos[0]||"", cantPlan:"", cantProd:"", estado:"Tejeduría" }]
+});
   const sf = (k,v) => setForm(f=>({...f,[k]:v}));
   const si = (pid,k,v) => setForm(f=>({...f, items:f.items.map(it=>it.pid===pid?{...it,[k]:v}:it)}));
   const addItem = () => setForm(f=>({...f, items:[...f.items,{ pid:uid(), producto:productos[0]||"", cantPlan:"", cantProd:"0", estado:"Tejeduría" }]}));
@@ -156,6 +163,17 @@ function ModalOP({ initial, productos, clientes, onSave, onClose }) {
         <div style={{ fontWeight:900, fontSize:17, color:"#f1f5f9", marginBottom:20 }}>{initial?.id?"✏️ Editar OP":"➕ Nueva Orden de Producción"}</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
           <LabelField label="Fecha"><Inp type="date" value={form.fecha} onChange={v=>sf("fecha",v)} style={{ width:"100%" }} /></LabelField>
+          <LabelField label="Número OP">
+  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+    <span style={{ color:"#94a3b8", fontWeight:700 }}>OP-</span>
+    <Inp
+      value={form.numero}
+      onChange={v=>sf("numero", v.replace(/\D/g, ""))}
+      placeholder="001"
+      style={{ width:"100%" }}
+    />
+  </div>
+</LabelField>
           <LabelField label="Fecha Estimada Entrega"><Inp type="date" value={form.fechaEntrega} onChange={v=>sf("fechaEntrega",v)} style={{ width:"100%" }} /></LabelField>
           <div style={{ gridColumn:"1/3" }}>
             <LabelField label="Cliente">
@@ -202,10 +220,17 @@ function ModalOP({ initial, productos, clientes, onSave, onClose }) {
 // ── MODAL DESPACHO ───────────────────────────────────────────────────────────
 function ModalDesp({ initial, opIds, productos, clientes, onSave, onClose }) {
   const opOpts = ["Sin OP", ...opIds];
-  const [form, setForm] = useState(initial ? JSON.parse(JSON.stringify(initial)) : {
-    fecha:"", op:"Sin OP", cliente:clientes[0]||"", obs:"",
-    items:[{ pid:uid(), producto:productos[0]||"", cant:"", entregadoA:"", estadoDesp:"Pendiente", estadoFact:"❌ No facturado", numFact:"" }]
-  });
+  const [form, setForm] = useState(initial ? {
+  ...JSON.parse(JSON.stringify(initial)),
+  numero: initial?.id ? initial.id.replace("D-", "") : ""
+} : {
+  fecha:"",
+  op:"Sin OP",
+  cliente:clientes[0]||"",
+  obs:"",
+  numero:"",
+  items:[{ pid:uid(), producto:productos[0]||"", cant:"", entregadoA:"", estadoDesp:"Pendiente", estadoFact:"❌ No facturado", numFact:"" }]
+});
   const sf = (k,v) => setForm(f=>({...f,[k]:v}));
   const si = (pid,k,v) => setForm(f=>({...f, items:f.items.map(it=>it.pid===pid?{...it,[k]:v}:it)}));
   const addItem = () => setForm(f=>({...f, items:[...f.items,{ pid:uid(), producto:productos[0]||"", cant:"", entregadoA:"", estadoDesp:"Pendiente", estadoFact:"❌ No facturado", numFact:"" }]}));
@@ -217,6 +242,18 @@ function ModalDesp({ initial, opIds, productos, clientes, onSave, onClose }) {
         <div style={{ fontWeight:900, fontSize:17, color:"#f1f5f9", marginBottom:20 }}>{initial?.id?"✏️ Editar Despacho":"➕ Nuevo Despacho"}</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
           <LabelField label="Fecha"><Inp type="date" value={form.fecha} onChange={v=>sf("fecha",v)} style={{ width:"100%" }} /></LabelField>
+
+          <LabelField label="Número Despacho">
+  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+    <span style={{ color:"#94a3b8", fontWeight:700 }}>D-</span>
+    <Inp
+      value={form.numero}
+      onChange={v=>sf("numero", v.replace(/\D/g, ""))}
+      placeholder="001"
+      style={{ width:"100%" }}
+    />
+  </div>
+</LabelField>
           <LabelField label="OP # (opcional)">
             <Sel value={form.op} onChange={v=>sf("op",v)} options={opOpts} style={{ width:"100%", color: form.op==="Sin OP"?"#94a3b8":"#e2e8f0", fontStyle: form.op==="Sin OP"?"italic":"normal" }} />
           </LabelField>
@@ -265,10 +302,30 @@ function ModalDesp({ initial, opIds, productos, clientes, onSave, onClose }) {
 // ── MODAL PERCHADO ───────────────────────────────────────────────────────────
 function ModalPerc({ initial, opIds, clientes, tiposPerc, onSave, onClose }) {
   const opOpts = ["Sin OP", ...opIds];
-  const [form, setForm] = useState(initial ? JSON.parse(JSON.stringify(initial)) : {
-    fechaIng:"", fechaEnt:"", cliente:clientes[0]||"", op:"Sin OP", obs:"",
-    items:[{ pid:uid(), tipo:tiposPerc[0]||"", kg:"", precio:"", estado:"En proceso" }]
-  });
+  const [form, setForm] = useState(
+  initial
+    ? {
+        ...JSON.parse(JSON.stringify(initial)),
+        numero: initial?.id ? initial.id.replace("PC-", "") : "",
+      }
+    : {
+        fechaIng: "",
+        fechaEnt: "",
+        cliente: clientes[0] || "",
+        op: "Sin OP",
+        obs: "",
+        numero: "",
+        items: [
+          {
+            pid: uid(),
+            tipo: tiposPerc[0] || "",
+            kg: "",
+            precio: "",
+            estado: "En proceso",
+          },
+        ],
+      }
+);
   const sf = (k,v) => setForm(f=>({...f,[k]:v}));
   const si = (pid,k,v) => setForm(f=>({...f, items:f.items.map(it=>it.pid===pid?{...it,[k]:v}:it)}));
   const addItem = () => setForm(f=>({...f, items:[...f.items,{ pid:uid(), tipo:tiposPerc[0]||"", kg:"", precio:"", estado:"En proceso" }]}));
@@ -282,6 +339,17 @@ function ModalPerc({ initial, opIds, clientes, tiposPerc, onSave, onClose }) {
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
           <LabelField label="Fecha Ingreso"><Inp type="date" value={form.fechaIng} onChange={v=>sf("fechaIng",v)} style={{ width:"100%" }} /></LabelField>
           <LabelField label="Fecha Entrega"><Inp type="date" value={form.fechaEnt} onChange={v=>sf("fechaEnt",v)} style={{ width:"100%" }} /></LabelField>
+          <LabelField label="Número Perchado">
+  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+    <span style={{ color:"#94a3b8", fontWeight:700 }}>PC-</span>
+    <Inp
+      value={form.numero}
+      onChange={v=>sf("numero", v.replace(/\D/g, ""))}
+      placeholder="001"
+      style={{ width:"100%" }}
+    />
+  </div>
+</LabelField>
           <LabelField label="OP # (opcional)">
             <Sel value={form.op} onChange={v=>sf("op",v)} options={opOpts} style={{ width:"100%", color:form.op==="Sin OP"?"#94a3b8":"#e2e8f0", fontStyle:form.op==="Sin OP"?"italic":"normal" }} />
           </LabelField>
@@ -327,23 +395,18 @@ function ModalPerc({ initial, opIds, clientes, tiposPerc, onSave, onClose }) {
 }
 
 // ── SETTINGS TAB ─────────────────────────────────────────────────────────────
-function SettingsTab({
-  config,
-  onAddProducto,
-  onDeleteProducto,
-  onEditProducto,
-  onAddCliente,
-  onDeleteCliente,
-  onEditCliente,
-  onAddTipoPerc,
-  onDeleteTipoPerc,
-  onEditTipoPerc,
+function SettingsSection({
+  title,
+  color,
+  items,
+  inputVal,
+  setInputVal,
+  onAdd,
+  onDelete,
+  onEdit,
+  icon
 }) {
-  const [newProducto, setNewProducto] = useState("");
-  const [newCliente, setNewCliente] = useState("");
-  const [newTipo, setNewTipo] = useState("");
-
-  const Section = ({ title, color, items, inputVal, setInputVal, onAdd, onDelete, onEdit, icon }) => (
+  return (
     <div style={{ background:"#0f172a", border:`1px solid ${color}33`, borderRadius:14, padding:"22px 24px" }}>
       <div style={{ fontWeight:800, fontSize:14, color, marginBottom:16 }}>{icon} {title}</div>
 
@@ -408,14 +471,31 @@ function SettingsTab({
       </div>
     </div>
   );
+}
+function SettingsTab({
+  config,
+  onAddProducto,
+  onDeleteProducto,
+  onEditProducto,
+  onAddCliente,
+  onDeleteCliente,
+  onEditCliente,
+  onAddTipoPerc,
+  onDeleteTipoPerc,
+  onEditTipoPerc,
+}) {
+  const [newProducto, setNewProducto] = useState("");
+  const [newCliente, setNewCliente] = useState("");
+  const [newTipo, setNewTipo] = useState("");
 
+ 
   return (
     <div style={{ padding:"24px 28px", maxWidth:1100, margin:"0 auto" }}>
       <div style={{ fontWeight:900, fontSize:19, color:"#f1f5f9", marginBottom:6, letterSpacing:-.3 }}>⚙️ Configuración</div>
       <div style={{ color:"#475569", fontSize:13, marginBottom:24 }}>Administra los catálogos que se usan en todos los módulos.</div>
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:20 }}>
-        <Section
+        <SettingsSection
           title="Productos"
           color="#3b82f6"
           icon="📦"
@@ -427,7 +507,7 @@ function SettingsTab({
           onEdit={onEditProducto}
         />
 
-        <Section
+        <SettingsSection
           title="Clientes"
           color="#f59e0b"
           icon="🏢"
@@ -439,7 +519,7 @@ function SettingsTab({
           onEdit={onEditCliente}
         />
 
-        <Section
+        <SettingsSection
           title="Tipos de Perchado"
           color="#a78bfa"
           icon="🔵"
@@ -1006,7 +1086,7 @@ const opsFiltradas = [...data.ops]
     perchados: perchadosTransformados,
   }));
 }
-  const saveOP = async (form) => {
+const saveOP = async (form) => {
   try {
     const clienteNombre = form.cliente?.trim();
 
@@ -1040,34 +1120,27 @@ const opsFiltradas = [...data.ops]
 
     let codigo = form.id;
     let opId = null;
+    let numeroManual = String(form.numero || "").trim();
 
-    if (!codigo) {
-      const { data: opsExistentes, error: codigoError } = await supabase
-        .from("ordenes_produccion")
-        .select("codigo");
+    if (numeroManual) {
+      codigo = `OP-${numeroManual.padStart(3, "0")}`;
+    } else if (!codigo) {
+      codigo = await obtenerSiguienteCodigo("ordenes_produccion", "OP");
+    }
 
-      if (codigoError) throw codigoError;
+    const { data: codigosRepetidos, error: codigoExisteError } = await supabase
+      .from("ordenes_produccion")
+      .select("id, codigo")
+      .eq("codigo", codigo);
 
-      const numerosUsados = (opsExistentes || [])
-        .map((o) => {
-          const match = o.codigo?.match(/^OP-(\d+)$/);
-          return match ? parseInt(match[1], 10) : null;
-        })
-        .filter((n) => n !== null)
-        .sort((a, b) => a - b);
+    if (codigoExisteError) throw codigoExisteError;
 
-      let siguienteNumero = 1;
+    if (!form.id && codigosRepetidos?.length > 0) {
+      alert("Ese número de orden ya existe.");
+      return;
+    }
 
-      for (const n of numerosUsados) {
-        if (n === siguienteNumero) {
-          siguienteNumero++;
-        } else if (n > siguienteNumero) {
-          break;
-        }
-      }
-
-      codigo = `OP-${String(siguienteNumero).padStart(3, "0")}`;
-
+    if (!form.id) {
       const { data: opCreada, error: opError } = await supabase
         .from("ordenes_produccion")
         .insert({
@@ -1084,20 +1157,36 @@ const opsFiltradas = [...data.ops]
 
       opId = opCreada.id;
     } else {
-      const { data: opExistente, error: buscarOpError } = await supabase
+      const { data: opOriginal, error: buscarOpError } = await supabase
         .from("ordenes_produccion")
         .select("id, codigo")
-        .eq("codigo", codigo)
+        .eq("codigo", form.id)
         .maybeSingle();
 
       if (buscarOpError) throw buscarOpError;
-      if (!opExistente) throw new Error("No se encontró la OP a editar");
+      if (!opOriginal) throw new Error("No se encontró la OP a editar");
 
-      opId = opExistente.id;
+      opId = opOriginal.id;
+
+      if (codigo !== form.id) {
+        const { data: codigoDuplicado, error: codigoDuplicadoError } = await supabase
+          .from("ordenes_produccion")
+          .select("id, codigo")
+          .eq("codigo", codigo)
+          .maybeSingle();
+
+        if (codigoDuplicadoError) throw codigoDuplicadoError;
+
+        if (codigoDuplicado) {
+          alert("Ese número de orden ya existe.");
+          return;
+        }
+      }
 
       const { error: updateError } = await supabase
         .from("ordenes_produccion")
         .update({
+          codigo,
           fecha: form.fecha || null,
           cliente_id: clienteId,
           observaciones: form.obs || "",
@@ -1165,7 +1254,25 @@ const opsFiltradas = [...data.ops]
     alert("Hubo un error al guardar la OP. Revisa la consola.");
   }
 };
-  
+  async function obtenerSiguienteCodigo(tabla, prefijo) {
+  const { data, error } = await supabase
+    .from(tabla)
+    .select("codigo");
+
+  if (error) throw error;
+
+  let maxNumero = 0;
+
+  (data || []).forEach((row) => {
+    const match = row.codigo?.match(new RegExp(`^${prefijo}-(\\d+)$`));
+    if (match) {
+      const numero = parseInt(match[1], 10);
+      if (numero > maxNumero) maxNumero = numero;
+    }
+  });
+
+  return `${prefijo}-${String(maxNumero + 1).padStart(3, "0")}`;
+}
 const saveDesp = async (form) => {
   try {
     const clienteNombre = form.cliente?.trim();
@@ -1200,35 +1307,27 @@ const saveDesp = async (form) => {
 
     let codigo = form.id;
     let despachoId = null;
+    let numeroManual = String(form.numero || "").trim();
 
-    // SI ES NUEVO → generar código e insertar
-    if (!codigo) {
-      const { data: despachosExistentes, error: codigoError } = await supabase
-        .from("despachos")
-        .select("codigo");
+    if (numeroManual) {
+      codigo = `D-${numeroManual.padStart(3, "0")}`;
+    } else if (!codigo) {
+      codigo = await obtenerSiguienteCodigo("despachos", "D");
+    }
 
-      if (codigoError) throw codigoError;
+    const { data: codigosRepetidos, error: codigoExisteError } = await supabase
+      .from("despachos")
+      .select("id, codigo")
+      .eq("codigo", codigo);
 
-      const numerosUsados = (despachosExistentes || [])
-        .map((d) => {
-          const match = d.codigo?.match(/^D-(\d+)$/);
-          return match ? parseInt(match[1], 10) : null;
-        })
-        .filter((n) => n !== null)
-        .sort((a, b) => a - b);
+    if (codigoExisteError) throw codigoExisteError;
 
-      let siguienteNumero = 1;
+    if (!form.id && codigosRepetidos?.length > 0) {
+      alert("Ese número de despacho ya existe.");
+      return;
+    }
 
-      for (const n of numerosUsados) {
-        if (n === siguienteNumero) {
-          siguienteNumero++;
-        } else if (n > siguienteNumero) {
-          break;
-        }
-      }
-
-      codigo = `D-${String(siguienteNumero).padStart(3, "0")}`;
-
+    if (!form.id) {
       const { data: despachoCreado, error: despachoError } = await supabase
         .from("despachos")
         .insert({
@@ -1245,21 +1344,36 @@ const saveDesp = async (form) => {
 
       despachoId = despachoCreado.id;
     } else {
-      // SI YA EXISTE → buscarlo y actualizarlo
-      const { data: despachoExistente, error: buscarDespachoError } = await supabase
+      const { data: despachoOriginal, error: buscarDespachoError } = await supabase
         .from("despachos")
         .select("id, codigo")
-        .eq("codigo", codigo)
+        .eq("codigo", form.id)
         .maybeSingle();
 
       if (buscarDespachoError) throw buscarDespachoError;
-      if (!despachoExistente) throw new Error("No se encontró el despacho a editar");
+      if (!despachoOriginal) throw new Error("No se encontró el despacho a editar");
 
-      despachoId = despachoExistente.id;
+      despachoId = despachoOriginal.id;
+
+      if (codigo !== form.id) {
+        const { data: codigoDuplicado, error: codigoDuplicadoError } = await supabase
+          .from("despachos")
+          .select("id, codigo")
+          .eq("codigo", codigo)
+          .maybeSingle();
+
+        if (codigoDuplicadoError) throw codigoDuplicadoError;
+
+        if (codigoDuplicado) {
+          alert("Ese número de despacho ya existe.");
+          return;
+        }
+      }
 
       const { error: updateError } = await supabase
         .from("despachos")
         .update({
+          codigo,
           fecha: form.fecha || null,
           op_codigo: form.op || "Sin OP",
           cliente_id: clienteId,
@@ -1269,7 +1383,6 @@ const saveDesp = async (form) => {
 
       if (updateError) throw updateError;
 
-      // borrar items viejos
       const { error: deleteItemsError } = await supabase
         .from("despacho_items")
         .delete()
@@ -1278,7 +1391,6 @@ const saveDesp = async (form) => {
       if (deleteItemsError) throw deleteItemsError;
     }
 
-    // insertar items actuales del formulario
     for (const item of form.items) {
       let productoId = null;
       const productoNombre = item.producto?.trim();
@@ -1330,14 +1442,13 @@ const saveDesp = async (form) => {
     console.error("Error guardando despacho COMPLETO:", error);
     alert("Hubo un error al guardar el despacho. Revisa la consola.");
   }
-
 };
-  const savePerc = async (form) => {
+const savePerc = async (form) => {
   try {
     const clienteNombre = form.cliente?.trim();
 
     if (!clienteNombre) {
-      alert("Debes seleccionar o escribir un cliente");
+      alert("Debes seleccionar un cliente");
       return;
     }
 
@@ -1366,34 +1477,27 @@ const saveDesp = async (form) => {
 
     let codigo = form.id;
     let perchadoId = null;
+    let numeroManual = String(form.numero || "").trim();
 
-    if (!codigo) {
-      const { data: perchadosExistentes, error: codigoError } = await supabase
-        .from("ordenes_perchado")
-        .select("codigo");
+    if (numeroManual) {
+      codigo = `PC-${numeroManual.padStart(3, "0")}`;
+    } else if (!codigo) {
+      codigo = await obtenerSiguienteCodigo("ordenes_perchado", "PC");
+    }
 
-      if (codigoError) throw codigoError;
+    const { data: codigosRepetidos, error: codigoExisteError } = await supabase
+      .from("ordenes_perchado")
+      .select("id, codigo")
+      .eq("codigo", codigo);
 
-      const numerosUsados = (perchadosExistentes || [])
-        .map((p) => {
-          const match = p.codigo?.match(/^PC-(\d+)$/);
-          return match ? parseInt(match[1], 10) : null;
-        })
-        .filter((n) => n !== null)
-        .sort((a, b) => a - b);
+    if (codigoExisteError) throw codigoExisteError;
 
-      let siguienteNumero = 1;
+    if (!form.id && codigosRepetidos?.length > 0) {
+      alert("Ese número de perchado ya existe.");
+      return;
+    }
 
-      for (const n of numerosUsados) {
-        if (n === siguienteNumero) {
-          siguienteNumero++;
-        } else if (n > siguienteNumero) {
-          break;
-        }
-      }
-
-      codigo = `PC-${String(siguienteNumero).padStart(3, "0")}`;
-
+    if (!form.id) {
       const { data: perchadoCreado, error: perchadoError } = await supabase
         .from("ordenes_perchado")
         .insert({
@@ -1411,20 +1515,36 @@ const saveDesp = async (form) => {
 
       perchadoId = perchadoCreado.id;
     } else {
-      const { data: perchadoExistente, error: buscarPerchadoError } = await supabase
+      const { data: perchadoOriginal, error: buscarPerchadoError } = await supabase
         .from("ordenes_perchado")
         .select("id, codigo")
-        .eq("codigo", codigo)
+        .eq("codigo", form.id)
         .maybeSingle();
 
       if (buscarPerchadoError) throw buscarPerchadoError;
-      if (!perchadoExistente) throw new Error("No se encontró la orden de perchado a editar");
+      if (!perchadoOriginal) throw new Error("No se encontró el perchado a editar");
 
-      perchadoId = perchadoExistente.id;
+      perchadoId = perchadoOriginal.id;
+
+      if (codigo !== form.id) {
+        const { data: codigoDuplicado, error: codigoDuplicadoError } = await supabase
+          .from("ordenes_perchado")
+          .select("id, codigo")
+          .eq("codigo", codigo)
+          .maybeSingle();
+
+        if (codigoDuplicadoError) throw codigoDuplicadoError;
+
+        if (codigoDuplicado) {
+          alert("Ese número de perchado ya existe.");
+          return;
+        }
+      }
 
       const { error: updateError } = await supabase
         .from("ordenes_perchado")
         .update({
+          codigo,
           fecha_ingreso: form.fechaIng || null,
           fecha_entrega: form.fechaEnt || null,
           cliente_id: clienteId,
@@ -1487,10 +1607,10 @@ const saveDesp = async (form) => {
     await cargarPerchados();
 
     setModal(null);
-    alert(codigo === form.id ? "Orden de perchado actualizada" : "Orden de perchado guardada en Supabase");
+    alert(codigo === form.id ? "Perchado actualizado" : "Perchado guardado");
   } catch (error) {
-    console.error("Error guardando perchado:", error);
-    alert("Hubo un error al guardar la orden de perchado. Revisa la consola.");
+    console.error("Error guardando perchado COMPLETO:", error);
+    alert("Error guardando perchado. Revisa la consola.");
   }
 };
   const confirmDel = async () => {
